@@ -10,25 +10,47 @@ class GitHubWebView extends StatefulWidget {
 
 class _GitHubWebViewState extends State<GitHubWebView> {
   late final WebViewController controller;
+  var loadingPercentage = 0;
 
   @override
   void initState() {
     super.initState();
     controller = WebViewController()
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageStarted: (url) {
+          setState(() {
+            loadingPercentage = 0;
+          });
+        },
+        onProgress: (progress) {
+          setState(() {
+            loadingPercentage = progress;
+          });
+        },
+        onPageFinished: (url) {
+          setState(() {
+            loadingPercentage = 100;
+          });
+        },
+      ))
       ..loadRequest(
-        Uri.parse('https://github.com/psmithese'),
+        Uri.parse('https://github.com/psmithese/WebView.git'),
       );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text('GitHub Profile'),
-      ),
-      body: WebViewWidget(
-        controller: controller,
+    return SafeArea(
+      child: Stack(
+        children: [
+          WebViewWidget(
+            controller: controller,
+          ),
+          if (loadingPercentage < 100)
+            LinearProgressIndicator(
+              value: loadingPercentage / 100.0,
+            ),
+        ],
       ),
     );
   }
